@@ -1,0 +1,16 @@
+URLNF https://www.open-epg.com/files/china1.xml
+CCTV-1 综合.cn
+CCTV-2 财经.cn
+
+URLF https://www.open-epg.com/files/serbia1.xml
+RTS 1.rs
+RTS 2.rs
+RTS 3.rs
+
+URL https://www.open-epg.com/files/serbia3.xml
+Televizija Crne Gore MNE.rs
+
+#URL https://www.open-epg.com/files/turkey3.xml
+TV8 HD.tr
+ATV HD.tr
+BEYAZ TV HD.tr

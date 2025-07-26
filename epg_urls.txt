@@ -1,0 +1,2 @@
+https://www.open-epg.com/files/serbia1.xml
+https://www.open-epg.com/files/croatia1.xml

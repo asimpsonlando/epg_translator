@@ -1,0 +1,14 @@
+PATHNF C:\epg_files\testepg_nofallback.xml
+HRT 1.hr
+HRT 2.hr
+
+PATHF C:\epg_files\testepg_fallback.xml
+RTS1.rs
+RTS2.rs
+
+PATH C:\epg_files\testepg_defaultfallback.xml
+RTCG1.me
+RTCG2.me
+
+#PATH C:\epg_files\testepg_bypassed.xml
+HRT 3.hr
