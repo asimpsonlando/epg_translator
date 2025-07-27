@@ -1,6 +1,12 @@
 # epg_translator
 A python script to translate EPG files in XMLTV standard, using Google Translate (with fallback to ChatGPT available)
 
+## Repository content description
+- `LICENSE`: MIT License description
+- `README.md`: this file
+- `epg_translator.py`: the script
+- `epg_urls.txt`, `local_channel_filters.txt`, `local_epg_paths.txt`, `url_channel_filters.txt`: configuration files containing the location of the EPG files and channel filters (when applicable)
+
 ## Description of capabilities
 - This script downloads online EPG files or uses locally hosted EPG files, translates relevant fields (channel `display-name`, programme `title`, `desc`, `category` and `country`) for the next 3 days (will be configurable in the future), and returns and stores locally an output EPG file, where translated text is followed by a / sign and the original text.
 - For example:
@@ -12,15 +18,16 @@ News / Vijesti
 - Translation is done by batch through Google Translate (free) via the deep_translator python package. The script has the capability to fallback to ChatGPT in case the translation via Google Translate errors or returns unchanged text. Please note that ChatGPT translation is not free, and you need a ChatGPT API key for the fallback function to work. You can leave it empty and disable the fallback function if you do not want to be charged.
 - Please note this has been only tested on Windows. Since there is a capability to point to local EPG files via entering their path, this might not work in other OSs. I might test it on Mac and Linux in the future.
 
-## Python package dependencies
--The following python packages need to be installed for the script to run: `langdetect`, `deep_translator` and `openai`.
-- To install these packages, use:
-```
-pip install langdetect
-pip install deep_translator
-pip install openai
-```
-- You might need to install other packages depending on what is already installed on your machine. Refer to the import command at the start of the script to identify potentially missing packages.
+## How to install
+- Copy the contents of this repository in a local folder on your machine.
+- The following python packages need to be installed for the script to run: `langdetect`, `deep_translator` and `openai`.
+  - To install these packages, use:
+  ```
+  pip install langdetect
+  pip install deep_translator
+  pip install openai
+  ```
+  - You might need to install other packages depending on what is already installed on your machine. Refer to the import command at the start of the script to identify potentially missing packages.
 ## How to run script
 - The script does not take any option in input. All configuration is done either inside the script itself, or in the configuration files (see below).
 - Script is run simply by:
