@@ -1,1 +1,2 @@
-C:\epg_files\epg.xml
+C:\epg_files\epg1.xml
+C:\epg_files\epg2.xml
