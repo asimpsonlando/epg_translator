@@ -206,14 +206,17 @@ def translate_xml_content(xml_string, allowed_channel_ids=None, log_source_name=
                 allowed_channel_ids is None or
                 programme.attrib.get('channel') in allowed_channel_ids
             )
+
             start_str = programme.attrib.get('start', '')[:14]
             try:
                 start_time = datetime.strptime(start_str, "%Y%m%d%H%M%S")
             except ValueError:
                 start_time = None
 
-            if not channel_ok or not start_time or start_time > three_days_later:
+            # Remove if: wrong channel OR invalid date OR in the past OR beyond 3 days
+            if (not channel_ok or not start_time or start_time <= now or start_time > three_days_later):
                 root.remove(programme)
+
 
         # Filter <channel> by id if needed
         if allowed_channel_ids is not None:
