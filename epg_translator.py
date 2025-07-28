@@ -282,6 +282,11 @@ def batch_translate_worker(batch, batch_index, total_batches, use_chatgpt_fallba
         translated_texts = [None] * len(texts)
 
     for j, ((elem, parent_tag), original_text, translated) in enumerate(zip(batch, texts, translated_texts)):
+         # Skip empty original text
+        if not original_text.strip():
+            results[j] = (elem, original_text)  # keep as is
+            continue
+            
         if not translated:
             print(f"[WARN] Google returned None for text: \"{original_text}\"")
 
