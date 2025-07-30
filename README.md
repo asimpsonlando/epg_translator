@@ -5,6 +5,7 @@ A python script to translate EPG files in XMLTV standard, using Google Translate
 - `LICENSE`: MIT License description
 - `README.md`: this file
 - `epg_translator.py`: the script
+- `config.txt` : main configuration file
 - `epg_urls.txt`, `local_channel_filters.txt`, `local_epg_paths.txt`, `url_channel_filters.txt`: configuration files containing the location of the EPG files and channel filters (when applicable)
 
 ## Description of capabilities
@@ -29,14 +30,21 @@ News / Vijesti
   ```
   - You might need to install other packages depending on what is already installed on your machine. Refer to the import command at the start of the script to identify potentially missing packages.
 ## How to run script
-- The script does not take any option in input. All configuration is done either inside the script itself, or in the configuration files (see below).
 - Script is run simply by:
 ```
 python epg_translator.py
 ```
 - Please note that the translation process is slow. It is recommended to schedule the script to run at night so that translated EPG files are ready in the morning.
 - Translated XMLTV EPG files will be saved in the `translated_epg_xmls` folder, with the same name as the original file.
-## Variables to configure directly inside the script
+- If you want to target a different configuration file (with a name different from `config.txt`, or not in the same location), you can use the following option:
+  ```
+  python epg_translator.py -c new_config.txt
+  ```
+  or
+  ```
+  python epg_translator.py --config new_config.txt
+  ```
+## Variables to configure inside the main configuration file (`config.txt`)
 - The following variables can be configured in the script:
   - `SKIP_LANGUAGES = {'en', 'fr', 'es', 'it'}` : Skip languages for which you do not need a translation
   - `OPENAI_KEY = 'sk-xxx'` : Only needed if you are planning to use ChatGPT translation fallback (you will be charged for API usage!)
@@ -137,3 +145,8 @@ python epg_translator.py
   
 ## How to use resulting xml EPG files
 - Instead of pointing your IPTV app to the original XMLTV EPG file (either online or local), point it to the translated XMLTV EPG file stored in the `translated_epg_xmls` folder.
+- You can create a batch file starting the script and run it through Windows Task Scheduler daily. For example:
+  ```
+  cd C:\epg_translator
+  python epg_translator.py
+  ```
