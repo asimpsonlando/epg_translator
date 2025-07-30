@@ -11,21 +11,61 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Tuple
 import time
+import argparse
 
 
-# ====== CONFIG ======
-URL_LIST_FILE = 'epg_urls.txt' #URLs for full epg files to be translated. If a URL is in both URL_LIST_FILE and URL_FILTER_FILE, the filtered version prevails
-LOCAL_PATHS_FILE = 'local_epg_paths.txt' #Local paths for full epg files to be translated. If a path is in both LOCAL_PATHS_FILE and LOCAL_FILTER_FILE, the filtered version prevails
-URL_FILTER_FILE = 'url_channel_filters.txt' #URLs for epg files to be translated, filtered on specific channels
-LOCAL_FILTER_FILE = 'local_channel_filters.txt' #Local paths for epg files to be translated, filtered on specific channels
-OUTPUT_FOLDER = 'translated_epg_xmls'
-SKIP_LANGUAGES = {'en', 'fr', 'es', 'it'} #skip languages for which you do not need a translation
-NUM_WORKERS = 1
-OPENAI_KEY = '' #only needed if you use chatgpt fallback
-ENABLE_CHATGPT_FALLBACK = False
-BATCH_SIZE = 500
-BATCH_SIZE_CHATGPT = 50
-TARGET_LANGUAGE = 'en'
+# ================= CONFIG LOADER ================= #
+
+def load_config(config_path):
+    """Load key=value pairs from a config file, stripping surrounding quotes."""
+    config = {}
+    with open(config_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' not in line:
+                continue
+
+            key, value = line.split('=', 1)
+            key, value = key.strip(), value.strip()
+
+            # ✅ Remove surrounding single or double quotes
+            if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+                value = value[1:-1]
+
+            # ✅ Type conversion
+            if value.lower() in ('true', 'false'):
+                value = value.lower() == 'true'
+            elif value.isdigit():
+                value = int(value)
+
+            config[key] = value
+    return config
+
+
+
+# ---- Parse CLI Arguments ---- #
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", help="Path to configuration file", default="config.txt")
+args = parser.parse_args()
+
+# ---- Load configuration ---- #
+cfg = load_config(args.config) if os.path.exists(args.config) else {}
+
+# ---- Assign configuration variables ---- #
+URL_LIST_FILE = cfg.get('URL_LIST_FILE', 'epg_urls.txt')
+LOCAL_PATHS_FILE = cfg.get('LOCAL_PATHS_FILE', 'local_epg_paths.txt')
+URL_FILTER_FILE = cfg.get('URL_FILTER_FILE', 'url_channel_filters.txt')
+LOCAL_FILTER_FILE = cfg.get('LOCAL_FILTER_FILE', 'local_channel_filters.txt')
+OUTPUT_FOLDER = cfg.get('OUTPUT_FOLDER', 'translated_epg_xmls')
+SKIP_LANGUAGES = set(cfg.get('SKIP_LANGUAGES', 'en,fr,es,it').split(','))
+NUM_WORKERS = int(cfg.get('NUM_WORKERS', 1))
+OPENAI_KEY = cfg.get('OPENAI_KEY', '')
+ENABLE_CHATGPT_FALLBACK = bool(cfg.get('ENABLE_CHATGPT_FALLBACK', False))
+BATCH_SIZE = int(cfg.get('BATCH_SIZE', 500))
+BATCH_SIZE_CHATGPT = int(cfg.get('BATCH_SIZE_CHATGPT', 50))
+TARGET_LANGUAGE = cfg.get('TARGET_LANGUAGE', 'en')
 
 
 # ====================
@@ -124,13 +164,27 @@ def load_channel_filters(filepath, header_key):
 
     - Lines starting with '#' are ignored unless it's a commented header.
     - If a header line (e.g. #URL ...) is commented, the whole block is skipped and logged.
+    - Supports URLF / URLNF and PATHF / PATHNF tags for forcing ChatGPT fallback behavior.
     """
+
     from collections import defaultdict
     filters = defaultdict(set)
     fallback_settings = {}
+
+    # ✅ Normalize and strip quotes if present
+    if filepath:
+        filepath = filepath.strip().strip("'").strip('"')
+
+    # ✅ Check for empty or missing file
+    if not filepath:
+        print(f"⚠️ Channel filter skipped: No path configured for {header_key}.")
+        return filters, fallback_settings
+    if not os.path.exists(filepath):
+        print(f"⚠️ Channel filter skipped: File not found -> {filepath}")
+        return filters, fallback_settings
+
     current_key = None
     skip_block = False
-    force_fallback = None
 
     with open(filepath, 'r', encoding='utf-8') as f:
         for line in f:
@@ -150,23 +204,24 @@ def load_channel_filters(filepath, header_key):
             if stripped.startswith(header_key + 'NF'):
                 current_key = stripped[len(header_key + 'NF'):].strip()
                 skip_block = False
-                fallback_settings[current_key] = False
+                fallback_settings[current_key.lower()] = False
 
             elif stripped.startswith(header_key + 'F'):
                 current_key = stripped[len(header_key + 'F'):].strip()
                 skip_block = False
-                fallback_settings[current_key] = True
+                fallback_settings[current_key.lower()] = True
 
             elif stripped.startswith(header_key):
                 current_key = stripped[len(header_key):].strip()
                 skip_block = False
-                fallback_settings[current_key] = None
-
+                fallback_settings[current_key.lower()] = None
 
             elif current_key and not skip_block:
                 filters[current_key].add(stripped)
 
     return filters, fallback_settings
+
+
 
 def should_use_chatgpt_fallback(source_key, fallback_settings):
     normalized_key = source_key.strip().lower()
@@ -399,13 +454,18 @@ def main():
     Path(OUTPUT_FOLDER).mkdir(parents=True, exist_ok=True)
 
     # Load filters
-    url_filters, url_fallback_settings = load_channel_filters(URL_FILTER_FILE, "URL") if os.path.exists(URL_FILTER_FILE) else ({}, {})
-    local_filters, local_fallback_settings = load_channel_filters(LOCAL_FILTER_FILE, "PATH") if os.path.exists(LOCAL_FILTER_FILE) else ({}, {})
+    url_filters, url_fallback_settings = load_channel_filters(URL_FILTER_FILE, "URL")
+    local_filters, local_fallback_settings = load_channel_filters(LOCAL_FILTER_FILE, "PATH")
+
 
 
     # --- Load and filter URL list ---
     urls = []
-    if os.path.exists(URL_LIST_FILE):
+    if not URL_LIST_FILE:
+        print("⚠️ URL list file is not configured. Skipping URL processing.")
+    elif not os.path.exists(URL_LIST_FILE):
+        print(f"⚠️ URL list file not found: {URL_LIST_FILE}")
+    else:
         with open(URL_LIST_FILE, 'r', encoding='utf-8') as f:
             urls = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
 
@@ -415,6 +475,23 @@ def main():
     for conflict in url_conflicts:
         print(f"⚠️ URL conflict: {conflict} is listed in both {URL_LIST_FILE} and {URL_FILTER_FILE}. Filtered version will be used.")
     urls_to_translate = [u for u in urls if u not in url_filters]
+    
+     # --- Load and filter local paths ---
+    paths = []
+    if not LOCAL_PATHS_FILE:
+        print("⚠️ Local path list file is not configured. Skipping local path processing.")
+    elif not os.path.exists(LOCAL_PATHS_FILE):
+        print(f"⚠️ Local path list file not found: {LOCAL_PATHS_FILE}")
+    else:
+        with open(LOCAL_PATHS_FILE, 'r', encoding='utf-8') as f:
+            paths = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+
+
+    # Handle conflicts: Filtered PATHs take precedence
+    local_conflicts = set(paths).intersection(local_filters.keys())
+    for conflict in local_conflicts:
+        print(f"⚠️ PATH conflict: {conflict} is listed in both {LOCAL_PATHS_FILE} and {LOCAL_FILTER_FILE}. Filtered version will be used.")
+    paths_to_translate = [p for p in paths if p not in local_filters]
 
     # --- Process filtered URLs ---
     for i, (url, allowed_channels) in enumerate(url_filters.items(), start=1):
@@ -444,18 +521,7 @@ def main():
             f.write(translated_xml)
         print(f"✅ Saved translated XML to: {out_path}")
 
-    # --- Load and filter local paths ---
-    paths = []
-    if os.path.exists(LOCAL_PATHS_FILE):
-        with open(LOCAL_PATHS_FILE, 'r', encoding='utf-8') as f:
-            paths = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
-
-
-    # Handle conflicts: Filtered PATHs take precedence
-    local_conflicts = set(paths).intersection(local_filters.keys())
-    for conflict in local_conflicts:
-        print(f"⚠️ PATH conflict: {conflict} is listed in both {LOCAL_PATHS_FILE} and {LOCAL_FILTER_FILE}. Filtered version will be used.")
-    paths_to_translate = [p for p in paths if p not in local_filters]
+   
 
     # --- Process filtered local files ---
     for i, (path, allowed_channels) in enumerate(local_filters.items(), start=1):
