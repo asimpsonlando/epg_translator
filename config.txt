@@ -1,0 +1,12 @@
+URL_LIST_FILE = 'epg_urls.txt'
+LOCAL_PATHS_FILE = 'local_epg_paths.txt'
+URL_FILTER_FILE = 'url_channel_filters.txt'
+LOCAL_FILTER_FILE = 'local_channel_filters.txt'
+OUTPUT_FOLDER = 'translated_epg_xmls'
+SKIP_LANGUAGES = {'en', 'fr', 'es', 'it'}
+NUM_WORKERS = 1
+OPENAI_KEY = ''
+ENABLE_CHATGPT_FALLBACK = False
+BATCH_SIZE = 500
+BATCH_SIZE_CHATGPT = 50
+TARGET_LANGUAGE = 'en'
