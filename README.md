@@ -44,6 +44,12 @@ python epg_translator.py
   ```
   python epg_translator.py --config new_config.txt
   ```
+- You can create a batch file starting the script and run it through Windows Task Scheduler daily. For example:
+  ```
+  cd C:\epg_translator
+  python epg_translator.py
+  ```
+  
 ## Variables to configure inside the main configuration file (`config.txt`)
 - The following variables can be configured in the script:
   - `SKIP_LANGUAGES = {'en', 'fr', 'es', 'it'}` : Skip languages for which you do not need a translation
@@ -145,8 +151,3 @@ python epg_translator.py
   
 ## How to use resulting xml EPG files
 - Instead of pointing your IPTV app to the original XMLTV EPG file (either online or local), point it to the translated XMLTV EPG file stored in the `translated_epg_xmls` folder.
-- You can create a batch file starting the script and run it through Windows Task Scheduler daily. For example:
-  ```
-  cd C:\epg_translator
-  python epg_translator.py
-  ```
