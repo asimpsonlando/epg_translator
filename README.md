@@ -51,7 +51,7 @@ python epg_translator.py
   ```
   
 ## Variables to configure inside the main configuration file (`config.txt`)
-- The following variables can be configured in the script:
+- The following variables can be configured in `config.txt`:
   - `SKIP_LANGUAGES = {'en', 'fr', 'es', 'it'}` : Skip languages for which you do not need a translation
   - `OPENAI_KEY = 'sk-xxx'` : Only needed if you are planning to use ChatGPT translation fallback (you will be charged for API usage!)
   - `ENABLE_CHATGPT_FALLBACK = False` : Can be true if you want to fallback to ChatGPT if the Google translation fails or is identical to the original text, or false to disable this fallback. Please note that this can be overridden at URL / local file path level.
