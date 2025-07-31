@@ -21,9 +21,10 @@ News / Vijesti
 
 ## How to install
 - Copy the contents of this repository in a local folder on your machine.
-- The following python packages need to be installed for the script to run: `langdetect`, `deep_translator` and `openai`.
+- The following python packages need to be installed for the script to run: `requests`, `langdetect`, `deep_translator` and `openai`.
   - To install these packages, use:
   ```
+  pip install requests
   pip install langdetect
   pip install deep_translator
   pip install openai
