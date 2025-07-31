@@ -16,7 +16,7 @@ News / Vijesti
 ```
 - You can then use that local output EPG file has a source EPG in your IPTV app.
 - Either all the channels contained in an EPG file can be translated, or only a subset of them, defined in configuration files.
-- Translation is done by batch through Google Translate (free) via the deep_translator python package. The script has the capability to fallback to ChatGPT in case the translation via Google Translate errors or returns unchanged text. Please note that ChatGPT translation is not free, and you need a ChatGPT API key for the fallback function to work. You can leave it empty and disable the fallback function if you do not want to be charged.
+- Translation is done by batch through Google Translate (free) via the deep_translator python package. The script has the capability to fallback to ChatGPT in case the translation via Google Translate errors or returns unchanged text. Please note that ChatGPT translation is not free, and you need a ChatGPT API key for the fallback function to work. You can leave it empty and disable the fallback function if you do not want to be charged. Google Translate works fine 99% of the cases.
 - Please note this has been only tested on Windows. Since there is a capability to point to local EPG files via entering their path, this might not work in other OSs. I might test it on Mac and Linux in the future.
 
 ## How to install
