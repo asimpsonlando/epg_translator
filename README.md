@@ -30,7 +30,7 @@ News / Vijesti
   pip install openai
   ```
   - You might need to install other packages depending on what is already installed on your machine. Refer to the import command at the start of the script to identify potentially missing packages.
-## How to run script
+## How to run the script
 - Script is run simply by:
 ```
 python epg_translator.py
